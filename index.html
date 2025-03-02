@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="tr"> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>Akıllı Kuaför Randevu Sistemi</title> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"> 
+  <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(135deg, #2c3e50, #4ca1af); display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; flex-direction: column; }
+
+        .container { display: flex; gap: 20px; flex-direction: column; width: 100%; max-width: 900px; }
+
+        .form-container, .preview-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px; border-radius: 12px; width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); color: white;
+        }
+
+        .preview-container {
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .form-group { position: relative; margin-bottom: 15px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px; padding-left: 40px; border: none; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2); color: white; outline: none;
+        }
+        .form-group input::placeholder, .form-group select option { color: rgba(255, 255, 255, 0.7); }
+        .form-group i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: white; font-size: 18px; }
+
+        .submit-btn {
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            background: #4ca1af; color: white; font-size: 18px; cursor: pointer;
+            transition: background 0.3s ease; box-shadow: 0 5px 15px rgba(76, 161, 175, 0.5);
+        }
+
+        .submit-btn:hover { background: #2c3e50; }
+        .feedback { margin-top: 10px; font-size: 14px; color: #ffeb3b; display: none; }
+        .hidden { display: none; }
+
+        .confirmation-message, .error-message {
+            margin-top: 10px;
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+
+        .confirmation-message {
+            background: #28a745;
+            color: white;
+        }
+
+        .error-message {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .randevu-summary { 
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 20px;
+        }
+
+        .randevu-summary p {
+            margin: 5px 0;
+        }
+
+        .randevu-summary b {
+            color: #f1c40f;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-container button {
+            background: #f1c40f;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-container button:hover {
+            background: #e67e22;
+        }
+
+        .share-btn {
+            background: #3498db;
+        }
+
+        .share-btn:hover {
+            background: #2980b9;
+        }
+        .made-by {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.made-by i {
+    color: white;
+}
+    </style> 
+ </head> 
+ <body> 
+  <div class="container"> 
+   <div class="form-container"> 
+    <h2><i class="fa fa-cut"></i> Kuaför Randevu Sistemi</h2> 
+    <div class="error-message" id="errorMessage"></div> 
+    <form id="appointmentForm"> 
+     <div class="form-group"> <i class="fa fa-user"></i> 
+      <input type="text" id="name" name="name" required placeholder="Adınız"> 
+     </div> 
+     <div class="form-group"> <i class="fa fa-phone"></i> 
+      <input type="tel" id="phone" name="phone" required placeholder="Telefon Numarası"> 
+     </div> 
+     <div class="form-group"> <i class="fa fa-cut"></i> <select id="service" name="service" required> <option value="" disabled selected>Hizmet Seçin...</option> <option value="sac_kesim" data-time="30dk" data-price="200 TL">Saç Kesimi</option> <option value="sac_boya" data-time="60dk" data-price="400 TL">Saç Boyama</option> <option value="bakim" data-time="45dk" data-price="300 TL">Bakım</option> </select> 
+     </div> 
+     <p id="serviceDetails" class="hidden"></p> 
+     <div class="form-group"> <i class="fa fa-calendar"></i> 
+      <input type="date" id="date" name="date" required> 
+     </div> 
+     <div class="form-group"> <i class="fa fa-clock"></i> 
+      <input type="time" id="time" name="time" required> 
+     </div> 
+     <div class="confirmation-message" id="confirmationMessage">
+       Randevunuz başarıyla oluşturulmuştur! 
+     </div> <button type="submit" class="submit-btn">Randevu Al</button> 
+    </form> 
+   </div> 
+   
+   
+   <div class="preview-container"> 
+    <div class="randevu-summary"> 
+     <h3>📅 Randevu Özeti</h3> 
+     <p><b>Ad:</b> <span id="preview-name"></span></p> 
+     <p><b>Telefon:</b> <span id="preview-phone"></span></p> 
+     <p><b>Hizmet:</b> <span id="preview-service"></span></p> 
+     <p><b>Tarih:</b> <span id="preview-date"></span></p> 
+     <p><b>Saat:</b> <span id="preview-time"></span></p> 
+     <p><b>Randevu Kodu:</b> <span id="appointment-code"></span></p> 
+     <div class="btn-container"> <button id="addReminderBtn">📱 Hatırlatıcı Ekle</button> <button id="shareBtn" class="share-btn">🔗 Paylaş</button> 
+     </div> 
+    </div> 
+   </div> 
+  </div> 
+  <i class="fa fa-copyright"></i> Made by Tuğrul Öndeş</p>
+        </div>
+    </div>
+  <script>
+    // Randevu onay mesajı
+    document.getElementById('service').addEventListener('change', function() {
+        let selectedOption = this.options[this.selectedIndex];
+        let details = `⏳ Süre: ${selectedOption.getAttribute('data-time')} | 💰 Ücret: ${selectedOption.getAttribute('data-price')}`;
+        document.getElementById('serviceDetails').innerText = details;
+        document.getElementById('serviceDetails').classList.remove('hidden');
+    });
+
+    let reservedDates = [];
+    document.getElementById('appointmentForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        let name = document.getElementById('name').value;
+        let phone = document.getElementById('phone').value;
+        let service = document.getElementById('service').options[document.getElementById('service').selectedIndex].text;
+        let date = document.getElementById('date').value;
+        let time = document.getElementById('time').value;
+
+        // Aynı saatte ve izin günlerinde randevu kontrolü
+        let errorMessage = '';
+        if (reservedDates.includes(date + ' ' + time)) {
+            errorMessage = 'Bu saatte daha önce alınmış bir randevu var. Lütfen başka bir zaman seçin.';
+        }
+
+        if (errorMessage) {
+            document.getElementById('errorMessage').innerText = errorMessage;
+            document.getElementById('errorMessage').classList.remove('hidden');
+        } else {
+            // Randevu başarıyla oluşturulduğunda
+            document.getElementById('preview-name').innerText = name;
+            document.getElementById('preview-phone').innerText = phone;
+            document.getElementById('preview-service').innerText = service;
+            document.getElementById('preview-date').innerText = date;
+            document.getElementById('preview-time').innerText = time;
+            document.getElementById('appointment-code').innerText = "#KFR" + Math.floor(Math.random() * 99999);
+
+            // Randevu oluşturulmuş bildirimi
+            document.getElementById('confirmationMessage').style.display = 'block';
+            reservedDates.push(date + ' ' + time); // Randevu kaydedildi
+
+            // Randevu özeti görünür hale getirilir
+            document.querySelector('.preview-container').style.display = 'block';
+        }
+
+        // Formu sıfırlama
+        document.getElementById('appointmentForm').reset();
+    });
+
+    // Hatırlatıcı ekleme butonu işlevi
+    document.getElementById('addReminderBtn').addEventListener('click', function() {
+        alert('Hatırlatıcı telefonunuza eklendi!');
+        // Hatırlatıcıyı telefon uygulamasına veya bildirimlere eklemek için
+        // uygun API kullanılabilir (örneğin: Notification API veya başka bir uygulama).
+    });
+
+    // Randevu paylaşma butonu işlevi
+    document.getElementById('shareBtn').addEventListener('click', function() {
+        let appointmentDetails = `
+            Randevu Bilgileri:
+            Ad: ${document.getElementById('preview-name').innerText}
+            Hizmet: ${document.getElementById('preview-service').innerText}
+            Tarih: ${document.getElementById('preview-date').innerText}
+            Saat: ${document.getElementById('preview-time').innerText}
+            Randevu Kodu: ${document.getElementById('appointment-code').innerText}
+        `;
+        // Paylaşma işlemi için URL paylaşımı veya sosyal medya API'leri kullanılabilir.
+        navigator.share({
+            title: 'Akıllı Kuaför Randevu',
+            text: appointmentDetails,
+            url: window.location.href
+        }).catch(console.error);
+    });
+</script> 
+ </body>
+</html>
